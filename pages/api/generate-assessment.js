@@ -1,16 +1,33 @@
-export default function handler(req, res) {
-    if (req.method === "POST") {
-      const { topic, questionCount } = req.body;
-  
-      // Generiere ein Platzhalter-Assessment: Eine Liste von Fragen
-      const assessment = Array.from({ length: questionCount }, (_, i) => ({
-        question: `Frage ${i + 1} zu ${topic}`,
-        // Optionen 1 bis 5 als Beispiel für die Bewertungsskala
-        options: ["1", "2", "3", "4", "5"],
-      }));
-  
-      res.status(200).json({ assessment });
-    } else {
-      res.status(405).json({ message: "Method not allowed" });
+import fetch from 'node-fetch';
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: "Method not allowed" });
+  }
+
+  try {
+    const { topic, questionCount } = req.body;
+    const response = await fetch('https://api.openai.com/v1/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "text-davinci-003",
+        prompt: `Erstelle ein Assessment zum Thema ${topic} mit ${questionCount} Fragen.`,
+        max_tokens: 150
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.statusText}`);
     }
-  }  
+
+    const data = await response.json();
+    res.status(200).json({ assessment: data });
+  } catch (error) {
+    console.error("Error in API route:", error);
+    res.status(500).json({ error: error.message });
+  }
+}

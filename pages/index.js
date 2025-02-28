@@ -8,15 +8,11 @@ export default function Home() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const response = await axios.post("/api/generate-assessment", {
-        topic,
-        questionCount,
-      });
-      setAssessment(response.data.assessment);
-    } catch (error) {
-      console.error("Fehler beim Generieren des Assessments:", error);
-    }
+    const response = await axios.post("/api/generate-assessment", {
+      topic,
+      questionCount,
+    });
+    setAssessment(response.data.assessment);
   };
 
   return (
